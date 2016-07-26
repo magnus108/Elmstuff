@@ -5,9 +5,9 @@ import Html.App as App
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 
-
 import Components.Gif as Gif
 import Components.Accordion as Accordion
+
 
 -- MAIN
 
@@ -26,8 +26,7 @@ main =
 
 
 type alias Model =
-    { accordion : Accordion.Model
-    , gif : Gif.Model
+    { accordion : Accordion.Model Gif.Model
     }
 
 
@@ -38,14 +37,9 @@ init : (Model, Cmd Msg)
 init =
     let
         (accordion, accordionCmds) =
-            Accordion.init Nothing
-
-        (gif, gifCmds) =
-            Gif.init Nothing
+            Accordion.init (Gif.init Nothing)
     in
-        Model accordion gif !
-            [ Cmd.map Accordion accordionCmds
-            , Cmd.map Gif gifCmds ]
+        Model accordion ! [ Cmd.map Accordion accordionCmds ]
 
 
 -- MESSAGES
@@ -53,7 +47,6 @@ init =
 
 type Msg
     = Accordion Accordion.Msg
-    | Gif Gif.Msg
 
 
 -- UPDATE
@@ -69,28 +62,13 @@ update message model =
             in
                 { model | accordion = accordion } ! [Cmd.map Accordion accordionCmds]
 
-        Gif msg ->
-            let
-                ( gif, gifCmds ) =
-                    Gif.update msg model.gif
-            in
-                { model | gif = gif } ! [Cmd.map Gif gifCmds]
-
 
 -- VIEW
 
 
 view : Model -> Html Msg
 view model =
-    if model.accordion.expand then
-        div []
-            [ App.map Accordion (Accordion.accordionCollapse)
-            , App.map Gif (Gif.view model.gif)
-            , text (toString model)
-            ]
-    else
-        div []
-            [ App.map Accordion (Accordion.accordionExpand) ]
+    div [] [ App.map Accordion (Accordion.view model.accordion) ]
 
 
 -- SUBSCRIPTIONS
@@ -98,7 +76,4 @@ view model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.batch
-        [ Sub.map Accordion (Accordion.subscriptions model.accordion)
-        , Sub.map Gif (Gif.subscriptions model.gif)
-        ]
+    Sub.map Accordion (Accordion.subscriptions Gif.subscriptions model.accordion)

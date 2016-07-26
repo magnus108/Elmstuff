@@ -9,35 +9,17 @@ import Json.Decode as Json
 import Task
 
 
-
-
-
-
-
-
 import Components.Gif as Gif
-
-
--- MAIN
 
 
 main : Program Never
 main =
     App.program
-        { init = init (Gif.init Nothing)
-        , view = view cView
-        , update = update Gif.update
-        , subscriptions = subscriptions Gif.subscriptions
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = subscriptions
         }
-
-
-
-cView cmodel =
-    Gif.view cmodel
-
-
-
-
 
 
 -- MODEL
@@ -52,12 +34,11 @@ type alias Model component =
 -- INIT
 
 
-init model =
+init=
     let
-        (component, componentCmds) = model
+        (component, componentCmds) = Gif.init Nothing
     in
-        Model False component !
-            [ Cmd.map Modify componentCmds ]
+        Model False component ! [ Cmd.map Modify componentCmds ]
 
 
 -- MESSAGES
@@ -72,7 +53,7 @@ type Msg componentMsg
 -- UPDATE
 
 
-update gifs msg model =
+update msg model =
     case msg of
 
         Expand ->
@@ -84,42 +65,32 @@ update gifs msg model =
         Modify componentMsg ->
             let
                 ( component, componentCmds ) =
-                    gifs componentMsg model.component
+                    Gif.update componentMsg model.component
             in
                 { model | component = component } ! [Cmd.map Modify componentCmds]
 
 -- VIEW
 
 
-view viewComponent model =
+view model =
     let
-        expand = accordionExpand
+        expand =
+            div [] [ button [ onClick Expand ] [ text "Expand" ] ]
 
-        collapse = accordionCollapse
+        collapse =
+            div [] [ button [ onClick Collapse ] [ text "Collapse" ] ]
 
         content =
-            accordionContent viewComponent model.component
+            div [] [ App.map Modify (Gif.view model.component) ]
 
         result =
-            if model.expand then [ collapse, content] else [ expand ]
+            if model.expand then [collapse, content] else [expand]
     in
         div [] result
-
-
-accordionContent viewComponent model =
-    div [] [ App.map Modify (viewComponent model) ]
-
-
-accordionExpand =
-    div [] [ button [ onClick Expand ] [ text "Expand" ] ]
-
-
-accordionCollapse =
-    div [] [ button [ onClick Collapse ] [ text "Collapse" ] ]
 
 
 -- SUBSCRIPTIONS
 
 
-subscriptions gifS model =
-    Sub.map Modify (gifS model.component)
+subscriptions model =
+    Sub.map Modify (Gif.subscriptions model.component)
