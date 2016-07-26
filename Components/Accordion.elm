@@ -9,97 +9,117 @@ import Json.Decode as Json
 import Task
 
 
+
+
+
+
+
+
+import Components.Gif as Gif
+
+
 -- MAIN
 
 
 main : Program Never
 main =
     App.program
-        { init = init Nothing
-        , view = view
-        , update = update
-        , subscriptions = subscriptions
+        { init = init (Gif.init Nothing)
+        , view = view cView
+        , update = update Gif.update
+        , subscriptions = subscriptions Gif.subscriptions
         }
+
+
+
+cView cmodel =
+    Gif.view cmodel
+
+
+
+
 
 
 -- MODEL
 
 
-type alias Model =
+type alias Model component =
     { expand : Bool
+    , component: component
     }
 
 
 -- INIT
 
 
-defaultModel : Model
-defaultModel =
-    { expand = False
-    }
-
-
-init : Maybe Model -> ( Model, Cmd Msg )
 init model =
     let
-        default = Maybe.withDefault defaultModel model
+        (component, componentCmds) = model
     in
-        default ! []
+        Model False component !
+            [ Cmd.map Modify componentCmds ]
 
 
 -- MESSAGES
 
 
-type Msg
+type Msg componentMsg
     = Expand
     | Collapse
+    | Modify componentMsg
 
 
 -- UPDATE
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update gifs msg model =
     case msg of
+
         Expand ->
             { model | expand = True } ! []
 
         Collapse ->
             { model | expand = False } ! []
 
+        Modify componentMsg ->
+            let
+                ( component, componentCmds ) =
+                    gifs componentMsg model.component
+            in
+                { model | component = component } ! [Cmd.map Modify componentCmds]
 
 -- VIEW
 
 
-view : Model -> Html Msg
-view model =
+view viewComponent model =
     let
         expand = accordionExpand
+
         collapse = accordionCollapse
+
+        content =
+            accordionContent viewComponent model.component
+
+        result =
+            if model.expand then [ collapse, content] else [ expand ]
     in
-        div []
-            [ expand
-            , collapse
-            ]
+        div [] result
 
 
-accordionExpand : Html Msg
+accordionContent viewComponent model =
+    div [] [ App.map Modify (viewComponent model) ]
+
+
 accordionExpand =
-    div []
-        [ button [ onClick Expand ] [ text "Expand" ]
-        ]
+    div [] [ button [ onClick Expand ] [ text "Expand" ] ]
 
 
-accordionCollapse : Html Msg
 accordionCollapse =
-    div []
-        [ button [ onClick Collapse ] [ text "Collapse" ]
-        ]
+    div [] [ button [ onClick Collapse ] [ text "Collapse" ] ]
 
 
 -- SUBSCRIPTIONS
 
 
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    Sub.none
+subscriptions gifS model =
+    Sub.map Modify (gifS model.component)
