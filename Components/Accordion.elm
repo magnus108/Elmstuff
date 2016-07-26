@@ -15,7 +15,7 @@ import Components.Gif as Gif
 main : Program Never
 main =
     App.program
-        { init = init
+        { init = init (Gif.init Nothing) Gif.update Gif.view Gif.subscriptions
         , view = view
         , update = update
         , subscriptions = subscriptions
@@ -25,20 +25,24 @@ main =
 -- MODEL
 
 
-type alias Model component =
+type alias Model component update view subscriptions =
     { expand : Bool
     , component: component
+    , update: update
+    , view: view
+    , subscriptions: subscriptions
     }
 
 
 -- INIT
 
 
-init=
+init model update view subscriptions=
     let
-        (component, componentCmds) = Gif.init Nothing
+        (component, componentCmds) = model
     in
-        Model False component ! [ Cmd.map Modify componentCmds ]
+        Model False component update view subscriptions
+            ! [ Cmd.map Modify componentCmds ]
 
 
 -- MESSAGES
@@ -65,9 +69,10 @@ update msg model =
         Modify componentMsg ->
             let
                 ( component, componentCmds ) =
-                    Gif.update componentMsg model.component
+                    model.update componentMsg model.component
             in
                 { model | component = component } ! [Cmd.map Modify componentCmds]
+
 
 -- VIEW
 
@@ -81,7 +86,7 @@ view model =
             div [] [ button [ onClick Collapse ] [ text "Collapse" ] ]
 
         content =
-            div [] [ App.map Modify (Gif.view model.component) ]
+            div [] [ App.map Modify (model.view model.component) ]
 
         result =
             if model.expand then [collapse, content] else [expand]
@@ -93,4 +98,4 @@ view model =
 
 
 subscriptions model =
-    Sub.map Modify (Gif.subscriptions model.component)
+    Sub.map Modify (model.subscriptions model.component)

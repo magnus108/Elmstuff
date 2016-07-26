@@ -26,18 +26,21 @@ main =
 
 
 type alias Model =
-    { accordion : Accordion.Model Gif.Model
+    { accordion : Accordion.Model
+        { gifUrl : String, topic : String }
+        (Gif.Msg -> Gif.Model -> ( Gif.Model, Cmd Gif.Msg ))
+        (Gif.Model -> Html Gif.Msg)
+        (Gif.Model -> Sub Gif.Msg)
     }
 
 
 -- INIT
 
 
-init : (Model, Cmd Msg)
 init =
     let
         (accordion, accordionCmds) =
-            Accordion.init (Gif.init Nothing)
+            Accordion.init (Gif.init Nothing) Gif.update Gif.view Gif.subscriptions
     in
         Model accordion ! [ Cmd.map Accordion accordionCmds ]
 
@@ -45,14 +48,13 @@ init =
 -- MESSAGES
 
 
-type Msg
-    = Accordion Accordion.Msg
+type Msg a
+    = Accordion a
 
 
 -- UPDATE
 
 
-update : Msg -> Model -> (Model, Cmd Msg)
 update message model =
     case message of
         Accordion msg ->
@@ -66,7 +68,6 @@ update message model =
 -- VIEW
 
 
-view : Model -> Html Msg
 view model =
     div [] [ App.map Accordion (Accordion.view model.accordion) ]
 
@@ -74,6 +75,5 @@ view model =
 -- SUBSCRIPTIONS
 
 
-subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.map Accordion (Accordion.subscriptions Gif.subscriptions model.accordion)
+    Sub.map Accordion (Accordion.subscriptions model.accordion)
