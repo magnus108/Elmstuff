@@ -37,7 +37,7 @@ type alias Model component update view subscriptions =
 -- INIT
 
 
-init model update view subscriptions=
+init model update view subscriptions =
     let
         (component, componentCmds) = model
     in

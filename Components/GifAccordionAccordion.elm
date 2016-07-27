@@ -1,11 +1,11 @@
-module Components.GifAccordion exposing (..)
+module Components.GifAccordionAccordion exposing (..)
 
 import Html exposing (..)
 import Html.App as App
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 
-import Components.Gif as Gif
+import Components.GifAccordion as GifAccordion
 import Components.Accordion as Accordion
 
 
@@ -25,7 +25,7 @@ main =
 -- MODEL
 
 
-type alias Model a b c d=
+type alias Model a b c d =
     { accordion : Accordion.Model a b c d
     }
 
@@ -36,7 +36,7 @@ type alias Model a b c d=
 init =
     let
         (accordion, accordionCmds) =
-            Accordion.init (Gif.init Nothing) Gif.update Gif.view Gif.subscriptions
+            Accordion.init (GifAccordion.init) GifAccordion.update GifAccordion.view GifAccordion.subscriptions
     in
         Model accordion ! [ Cmd.map Accordion accordionCmds ]
 
